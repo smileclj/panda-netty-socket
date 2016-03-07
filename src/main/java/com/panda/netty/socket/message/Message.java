@@ -1,0 +1,66 @@
+package com.panda.netty.socket.message;
+
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+import com.panda.netty.socket.constant.enums.CommandEnum;
+import com.panda.netty.socket.message.ins.LoginMessage;
+import com.panda.netty.socket.message.ins.QuitMessage;
+import com.panda.netty.socket.util.JsonUtil;
+
+@SuppressWarnings("rawtypes")
+public class Message<T> extends Header {
+	// 消息注册
+	private static final Map<Integer, Class> commandClassesMap = new HashMap<Integer, Class>();
+	private static final Map<Class, Integer> classedCommandMap = new HashMap<Class, Integer>();
+	public static final int HEAD_LENGTH = 50;
+
+	static {
+		// 登录
+		commandClassesMap.put(CommandEnum.LOGIN.getKey(), LoginMessage.class);
+		classedCommandMap.put(LoginMessage.class, CommandEnum.LOGIN.getKey());
+		// 退出
+		commandClassesMap.put(CommandEnum.QUIT.getKey(), QuitMessage.class);
+		classedCommandMap.put(QuitMessage.class, CommandEnum.QUIT.getKey());
+	}
+	// 消息体
+	private T body;
+
+	public Message() {
+		super();
+	}
+
+	public Message(short version, int command, String messageId) {
+		super(version, command, messageId);
+	}
+
+	public Message(int length, short version, int command, String messageId, Date createTime) {
+		super(length, version, command, messageId, createTime);
+	}
+
+	public Message(String messageId, T body) {
+		super((short) 1, classedCommandMap.get(body.getClass()), messageId);
+		this.body = body;
+	}
+
+	public byte[] encodeBody() {
+		// 序列化方式可以选择 json protobuf
+		byte[] bs = JsonUtil.toJsonString(this.body).getBytes();
+		setLength(bs.length);
+		return bs;
+	}
+
+	@SuppressWarnings("unchecked")
+	public void decodeBody(byte[] bs) {
+		this.body = (T) JsonUtil.parseObject(new String(bs), commandClassesMap.get(getCommand()));
+	}
+
+	public T getBody() {
+		return body;
+	}
+
+	public void setBody(T body) {
+		this.body = body;
+	}
+}
