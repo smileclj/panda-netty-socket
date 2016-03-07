@@ -26,7 +26,7 @@ public class Client {
 			b.handler(new ChannelInitializer<SocketChannel>() {
 				@Override
 				public void initChannel(SocketChannel ch) throws Exception {
-					ch.pipeline().addLast(new NettyClientHandler()).addLast(new HeaderEncoder());
+					ch.pipeline().addLast(new HeaderEncoder()).addLast(new NettyClientHandler());
 				}
 			});
 			ChannelFuture f = b.connect("127.0.0.1", 9100).sync();
