@@ -17,7 +17,8 @@ public class HeaderDecoder extends ByteToMessageDecoder {
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf buf, List<Object> out) throws Exception {
         logger.info("server message decode");
-        if (buf.readableBytes() < Message.HEAD_LENGTH) {
+        int readableBytes = buf.readableBytes();
+        if (readableBytes < Message.HEAD_LENGTH) {
             return;
         }
         buf.markReaderIndex();
@@ -25,14 +26,15 @@ public class HeaderDecoder extends ByteToMessageDecoder {
         short version = buf.readShort();
         int command = buf.readInt();
         byte[] messageIdBytes = new byte[32];
+        buf.readBytes(messageIdBytes);
         String messageId = new String(messageIdBytes);
         Date createTime = new Date(buf.readLong());
-
-        if (buf.readableBytes() < length) {
+        
+        if (readableBytes < length) {
             buf.resetReaderIndex();
             return;
         }
-        logger.info("server decode->length:{},readableBytes:{}",length,buf.readableBytes());
+        logger.info("server decode->length:{},readableBytes:{}", length, buf.readableBytes());
         Message<Object> message = new Message<Object>(length, version, command, messageId, createTime);
         byte[] bs = new byte[length - Message.HEAD_LENGTH];
         buf.readBytes(bs);
