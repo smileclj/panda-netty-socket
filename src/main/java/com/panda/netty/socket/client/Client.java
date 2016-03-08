@@ -1,41 +1,41 @@
 package com.panda.netty.socket.client;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.SocketChannel;
-import io.netty.channel.socket.nio.NioSocketChannel;
+import com.panda.netty.socket.message.Message;
+import com.panda.netty.socket.message.ins.LoginMessage;
+import com.panda.netty.socket.util.UUIDUtil;
 
 public class Client {
-	private static final Logger logger = LoggerFactory.getLogger(Client.class);
+	private InClient inClient;
+
+	public Client(String serverHost, int serverPort) {
+		inClient = new InClient(serverHost, serverPort);
+	}
+
+	public void connect() {
+		inClient.connect();
+	}
+
+	@SuppressWarnings("rawtypes")
+	public void sendMessage(Message message) {
+		inClient.sendMessage(message);
+	}
+
+	public void close() {
+		inClient.close();
+	}
 
 	public static void main(String[] args) {
-		EventLoopGroup workerGroup = new NioEventLoopGroup();
-
+		Client client = new Client("127.0.0.1", 9100);
+		client.connect();
+		LoginMessage lmBody = new LoginMessage();
+		lmBody.setUserId("123");
+		lmBody.setUserName("小明");
+		Message<LoginMessage> msLoginMessage = new Message<LoginMessage>(UUIDUtil.create(), lmBody);
+		msLoginMessage.encodeBody();
+		client.sendMessage(msLoginMessage);
 		try {
-			Bootstrap b = new Bootstrap();
-			b.group(workerGroup);
-			b.channel(NioSocketChannel.class);
-			b.option(ChannelOption.SO_KEEPALIVE, true);
-			b.handler(new ChannelInitializer<SocketChannel>() {
-				@Override
-				public void initChannel(SocketChannel ch) throws Exception {
-					ch.pipeline().addLast(new HeaderEncoder()).addLast(new NettyClientHandler());
-				}
-			});
-			ChannelFuture f = b.connect("127.0.0.1", 9100).sync();
-			logger.info("client start");
-			f.channel().closeFuture().sync();
+			Thread.sleep(5000);
 		} catch (InterruptedException e) {
-
-		} finally {
-			workerGroup.shutdownGracefully();
 		}
 	}
 }

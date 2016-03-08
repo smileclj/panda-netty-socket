@@ -12,33 +12,33 @@ import io.netty.handler.codec.ByteToMessageDecoder;
 
 public class HeaderDecoder extends ByteToMessageDecoder {
 
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+	private static final Logger logger = LoggerFactory.getLogger(HeaderDecoder.class);
 
-    @Override
-    protected void decode(ChannelHandlerContext ctx, ByteBuf buf, List<Object> out) throws Exception {
-        logger.info("server message decode");
-        int readableBytes = buf.readableBytes();
-        if (readableBytes < Message.HEAD_LENGTH) {
-            return;
-        }
-        buf.markReaderIndex();
-        int length = buf.readInt();
-        short version = buf.readShort();
-        int command = buf.readInt();
-        byte[] messageIdBytes = new byte[32];
-        buf.readBytes(messageIdBytes);
-        String messageId = new String(messageIdBytes);
-        Date createTime = new Date(buf.readLong());
-        
-        if (readableBytes < length) {
-            buf.resetReaderIndex();
-            return;
-        }
-        logger.info("server decode->length:{},readableBytes:{}", length, buf.readableBytes());
-        Message<Object> message = new Message<Object>(length, version, command, messageId, createTime);
-        byte[] bs = new byte[length - Message.HEAD_LENGTH];
-        buf.readBytes(bs);
-        message.decodeBody(bs);
-        out.add(message);
-    }
+	@Override
+	protected void decode(ChannelHandlerContext ctx, ByteBuf buf, List<Object> out) throws Exception {
+		logger.info("server message decode");
+		int readableBytes = buf.readableBytes();
+		if (readableBytes < Message.HEAD_LENGTH) {
+			return;
+		}
+		buf.markReaderIndex();
+		int length = buf.readInt();
+		short version = buf.readShort();
+		int command = buf.readInt();
+		byte[] messageIdBytes = new byte[32];
+		buf.readBytes(messageIdBytes);
+		String messageId = new String(messageIdBytes);
+		Date createTime = new Date(buf.readLong());
+
+		if (readableBytes < length) {
+			buf.resetReaderIndex();
+			return;
+		}
+		logger.info("server decode->length:{},readableBytes:{}", length, buf.readableBytes());
+		Message<Object> message = new Message<Object>(length, version, command, messageId, createTime);
+		byte[] bs = new byte[length - Message.HEAD_LENGTH];
+		buf.readBytes(bs);
+		message.decodeBody(bs);
+		out.add(message);
+	}
 }
