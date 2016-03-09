@@ -103,5 +103,5 @@ public class InServer extends Thread {
 	public void setChannelManager(ChannelManager channelManager) {
 		this.channelManager = channelManager;
 	}
-
+	
 }
